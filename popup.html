@@ -128,6 +128,16 @@
       color: #155724;
       border: 1px solid #c3e6cb;
     }
+    
+    .space-display {
+      padding: 8px;
+      background-color: #e9ecef;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #495057;
+      font-weight: 500;
+    }
   </style>
 </head>
 <body>
@@ -149,8 +159,9 @@
     </div>
     
     <div class="form-group">
-      <label for="spaceId">Space ID:</label>
-      <input id="spaceId" type="text" placeholder="Enter Circle Space ID">
+      <label>发布到:</label>
+      <div class="space-display">分享交流</div>
+      <input id="spaceId" type="hidden" value="2175665">
     </div>
     
     <button id="postButton">Post to Circle</button>

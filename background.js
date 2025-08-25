@@ -4,6 +4,31 @@ console.log('PathUnfold Web Clipper background script loaded');
 // Circle API configuration
 const CIRCLE_API_BASE = 'https://app.circle.so/api/headless/v1';
 
+// Initialize extension
+function initializeExtension() {
+  console.log('Initializing extension...');
+  // Remove existing context menu if it exists
+  chrome.contextMenus.remove('clipToCircle', () => {
+    if (chrome.runtime.lastError) {
+      // Ignore error if menu doesn't exist
+      console.log('Context menu removal: ' + chrome.runtime.lastError.message);
+    }
+    
+    // Create new context menu
+    chrome.contextMenus.create({
+      id: 'clipToCircle',
+      title: 'Clip to Circle',
+      contexts: ['selection', 'image', 'video', 'audio']
+    }, () => {
+      if (chrome.runtime.lastError) {
+        console.log('Context menu creation error:', chrome.runtime.lastError);
+      } else {
+        console.log('Context menu created successfully');
+      }
+    });
+  });
+}
+
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "postToCircle") {
@@ -48,10 +73,30 @@ async function postToCircle(data, sendResponse) {
       }
     }
     
+    // Enhanced video processing - try to get oEmbed iframe
+    let processedContent = data.content;
+    
+    // Check if content contains video URLs and try to enhance them
+    const videoUrlRegex = /(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=[^&\s]+|youtu\.be\/[^&\s]+|vimeo\.com\/\d+)[^\s]*)/g;
+    const videoMatches = data.content.match(videoUrlRegex);
+    
+    if (videoMatches) {
+      console.log('Found video URLs:', videoMatches);
+      
+      // Try to get oEmbed data for each video URL
+      for (const videoUrl of videoMatches) {
+        const oEmbedHtml = await getOEmbedData(videoUrl);
+        if (oEmbedHtml) {
+          console.log('Got oEmbed HTML for:', videoUrl);
+          processedContent = processedContent.replace(videoUrl, oEmbedHtml);
+        }
+      }
+    }
+    
     // Prepare request data
     const postData = {
       name: data.title,
-      body: data.content,
+      body: processedContent,
       post_type: "basic"
     };
     
@@ -183,17 +228,68 @@ async function testApiConnection(sendResponse) {
   }
 }
 
+// Get oEmbed data for video URL
+async function getOEmbedData(videoUrl) {
+  try {
+    // YouTube oEmbed API
+    if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+      const youtubeId = extractYouTubeId(videoUrl);
+      if (youtubeId) {
+        const oEmbedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${youtubeId}&format=json`;
+        const response = await fetch(oEmbedUrl);
+        if (response.ok) {
+          const data = await response.json();
+          return data.html;
+        }
+      }
+    }
+    
+    // Vimeo oEmbed API
+    if (videoUrl.includes('vimeo.com')) {
+      const vimeoId = videoUrl.match(/vimeo\.com\/(\d+)/);
+      if (vimeoId) {
+        const oEmbedUrl = `https://vimeo.com/api/oembed.json?url=https://vimeo.com/${vimeoId[1]}`;
+        const response = await fetch(oEmbedUrl);
+        if (response.ok) {
+          const data = await response.json();
+          return data.html;
+        }
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('oEmbed fetch error:', error);
+    return null;
+  }
+}
+
+// Extract YouTube ID from URL
+function extractYouTubeId(url) {
+  const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/;
+  const match = url.match(regex);
+  return match ? match[1] : null;
+}
+
 // Handle installation
 chrome.runtime.onInstalled.addListener((details) => {
   console.log('PathUnfold Web Clipper installed');
   chrome.storage.sync.set({
     backendUrl: 'https://your-project.vercel.app/api/auth'
   });
+  
+  // Initialize context menu
+  initializeExtension();
 });
 
-// Create context menu
-chrome.contextMenus.create({
-  id: 'clipToCircle',
-  title: 'Clip to Circle',
-  contexts: ['selection', 'image', 'video', 'audio']
+// Initialize on startup (handles extension reload)
+chrome.runtime.onStartup.addListener(() => {
+  console.log('Extension started up');
+  initializeExtension();
 });
+
+// Also initialize immediately for extension reload scenarios
+setTimeout(() => {
+  console.log('Delayed initialization');
+  initializeExtension();
+}, 100);

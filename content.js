@@ -42,26 +42,43 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     let mediaUrl = '';
     let mediaType = '';
     
-    // Check for video elements
-    const video = document.querySelector('video');
-    if (video && video.src) {
-      mediaUrl = video.src;
+    // Function to extract YouTube video ID from URL
+    function extractYouTubeId(url) {
+      const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/;
+      const match = url.match(regex);
+      return match ? match[1] : null;
+    }
+    
+    // Check if current page is a YouTube video
+    const currentUrl = window.location.href;
+    const youtubeId = extractYouTubeId(currentUrl);
+    if (youtubeId) {
+      mediaUrl = `https://www.youtube.com/watch?v=${youtubeId}`;
       mediaType = 'video';
-    } else {
-      // Check for common video embeds
-      const videoEmbeds = [
-        'iframe[src*="youtube.com"]',
-        'iframe[src*="youtu.be"]',
-        'iframe[src*="vimeo.com"]',
-        'iframe[src*="dailymotion.com"]'
-      ];
-      
-      for (const selector of videoEmbeds) {
-        const element = document.querySelector(selector);
-        if (element) {
-          mediaUrl = element.src;
-          mediaType = 'video';
-          break;
+    }
+    
+    // Check for video elements
+    if (!mediaUrl) {
+      const video = document.querySelector('video');
+      if (video && video.src) {
+        mediaUrl = video.src;
+        mediaType = 'video';
+      } else {
+        // Check for common video embeds
+        const videoEmbeds = [
+          'iframe[src*="youtube.com"]',
+          'iframe[src*="youtu.be"]',
+          'iframe[src*="vimeo.com"]',
+          'iframe[src*="dailymotion.com"]'
+        ];
+        
+        for (const selector of videoEmbeds) {
+          const element = document.querySelector(selector);
+          if (element) {
+            mediaUrl = element.src;
+            mediaType = 'video';
+            break;
+          }
         }
       }
     }
@@ -72,6 +89,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (audio && audio.src) {
         mediaUrl = audio.src;
         mediaType = 'audio';
+      }
+    }
+    
+    // Try to get video URL from meta tags
+    if (!mediaUrl) {
+      const metaVideo = document.querySelector('meta[property="og:video"]');
+      const metaVideoUrl = document.querySelector('meta[property="og:video:url"]');
+      if (metaVideo) {
+        mediaUrl = metaVideo.getAttribute('content');
+        mediaType = 'video';
+      } else if (metaVideoUrl) {
+        mediaUrl = metaVideoUrl.getAttribute('content');
+        mediaType = 'video';
       }
     }
 

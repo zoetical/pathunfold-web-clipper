@@ -10,6 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const previewDiv = document.getElementById('preview');
   const previewContent = document.getElementById('previewContent');
   
+  // Default space ID
+  const DEFAULT_SPACE_ID = '2175665';
+  
   // Check authentication status
   chrome.storage.sync.get(['accessToken', 'email'], (data) => {
     if (data.accessToken) {
@@ -30,10 +33,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Load saved space ID
+  // Set space ID (use saved if available, otherwise use default)
   chrome.storage.sync.get(['spaceId'], (data) => {
     if (data.spaceId) {
       spaceIdInput.value = data.spaceId;
+    } else {
+      spaceIdInput.value = DEFAULT_SPACE_ID;
     }
   });
   
@@ -62,7 +67,13 @@ document.addEventListener('DOMContentLoaded', () => {
           
           // Add media if found (video/audio)
           if (response.mediaUrl) {
-            bodyContent += `<p>${response.mediaUrl}</p>`; // Circle will auto-embed via oEmbed
+            if (response.mediaType === 'video') {
+              // Format video URL for better oEmbed support
+              const formattedVideoUrl = formatVideoUrl(response.mediaUrl);
+              bodyContent += `<p>${formattedVideoUrl}</p>`; // Circle will auto-embed via oEmbed
+            } else {
+              bodyContent += `<p>${response.mediaUrl}</p>`;
+            }
           }
           
           contentInput.value = bodyContent;
@@ -81,8 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const content = contentInput.value.trim();
     const spaceId = spaceIdInput.value.trim();
     
-    if (!title || !content || !spaceId) {
-      showStatus('Please fill in all fields', 'error');
+    if (!title || !content) {
+      showStatus('Please fill in title and content', 'error');
       return;
     }
     
@@ -91,8 +102,9 @@ document.addEventListener('DOMContentLoaded', () => {
     postButton.textContent = 'Posting...';
     showStatus('Posting to Circle...', 'info');
     
-    // Save space ID for future use
-    chrome.storage.sync.set({spaceId: spaceId});
+    // Save space ID for future use (ensure we always have a valid space ID)
+    const spaceIdToSave = spaceId || DEFAULT_SPACE_ID;
+    chrome.storage.sync.set({spaceId: spaceIdToSave});
     
     // Send message to background script to post
     chrome.runtime.sendMessage({
@@ -144,4 +156,33 @@ document.addEventListener('DOMContentLoaded', () => {
       previewDiv.style.display = 'none';
     }
   });
+  
+  // Format video URL for better oEmbed support
+  function formatVideoUrl(url) {
+    // YouTube URL normalization
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      const youtubeId = extractYouTubeId(url);
+      if (youtubeId) {
+        return `https://www.youtube.com/watch?v=${youtubeId}`;
+      }
+    }
+    
+    // Vimeo URL normalization
+    if (url.includes('vimeo.com')) {
+      const vimeoId = url.match(/vimeo\.com\/(\d+)/);
+      if (vimeoId) {
+        return `https://vimeo.com/${vimeoId[1]}`;
+      }
+    }
+    
+    // Return original URL if no normalization needed
+    return url;
+  }
+  
+  // Extract YouTube ID from URL
+  function extractYouTubeId(url) {
+    const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
+  }
 });
