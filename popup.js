@@ -54,15 +54,15 @@ document.addEventListener('DOMContentLoaded', () => {
           
           // Add selected text or description
           if (response.content && response.content !== "No content selected") {
-            bodyContent += `<p>${escapeHtml(response.content)}</p>`;
+            bodyContent += `${escapeHtml(response.content)}\n\n`;
           }
           
           // Add source link
-          bodyContent += `<p>Source: <a href="${response.url}">${response.url}</a></p>`;
+          bodyContent += `Source: <a href="${response.url}">${response.url}</a>\n\n`;
           
           // Add image if found
           if (response.imageUrl) {
-            bodyContent += `<p><img src="${response.imageUrl}" alt="Clipped Image" style="max-width:100%;"></p>`;
+            bodyContent += `<img src="${response.imageUrl}" alt="Clipped Image" style="max-width:100%;">\n\n`;
           }
           
           // Add media if found (video/audio)
@@ -70,9 +70,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.mediaType === 'video') {
               // Format video URL for better oEmbed support
               const formattedVideoUrl = formatVideoUrl(response.mediaUrl);
-              bodyContent += `<p>${formattedVideoUrl}</p>`; // Circle will auto-embed via oEmbed
+              bodyContent += `${formattedVideoUrl}\n\n`; // Circle will auto-embed via oEmbed
             } else {
-              bodyContent += `<p>${response.mediaUrl}</p>`;
+              bodyContent += `${response.mediaUrl}\n\n`;
             }
           }
           
