@@ -39,16 +39,27 @@ module.exports = async (req, res) => {
     // Check for required environment variable
     const CIRCLE_AUTH_TOKEN = process.env.CIRCLE_AUTH_TOKEN;
     if (!CIRCLE_AUTH_TOKEN) {
+      console.error('=== ENVIRONMENT VARIABLE ERROR ===');
       console.error('CIRCLE_AUTH_TOKEN environment variable is not set');
+      console.error('Available env vars:', Object.keys(process.env).filter(key => key.includes('CIRCLE') || key.includes('TOKEN')));
+      console.error('==================================');
       return res.status(500).json({ 
         error: 'Server configuration error',
         message: 'CIRCLE_AUTH_TOKEN environment variable is not configured',
-        debug: 'Contact administrator to configure CIRCLE_AUTH_TOKEN in Vercel project settings'
+        debug: {
+          hasCircleToken: false,
+          availableCircleEnvs: Object.keys(process.env).filter(key => key.includes('CIRCLE')),
+          note: 'Add CIRCLE_AUTH_TOKEN to your Vercel project environment variables'
+        }
       });
     }
 
-    console.log('Attempting authentication for:', email);
+    console.log('=== AUTHENTICATION ATTEMPT ===');
+    console.log('Email:', email);
+    console.log('Token configured:', !!CIRCLE_AUTH_TOKEN);
     console.log('Token length:', CIRCLE_AUTH_TOKEN.length);
+    console.log('Token prefix:', CIRCLE_AUTH_TOKEN.substring(0, 10) + '...');
+    console.log('==============================');
 
     const response = await fetch('https://app.circle.so/api/headless/v1/auth_token', {
       method: 'POST',
@@ -66,11 +77,40 @@ module.exports = async (req, res) => {
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       const textResponse = await response.text();
-      console.error('Circle API returned non-JSON response:', textResponse.substring(0, 200));
+      console.error('=== CIRCLE API DEBUG ===');
+      console.error('Content-Type:', contentType);
+      console.error('Response Status:', response.status);
+      console.error('Response Headers:', Object.fromEntries(response.headers.entries()));
+      console.error('Response Body (first 500 chars):', textResponse.substring(0, 500));
+      console.error('Full Response Length:', textResponse.length);
+      console.error('========================');
+      
+      // Check for common HTML error patterns
+      let errorMessage = 'Circle API returned invalid response format';
+      if (textResponse.includes('<!DOCTYPE html>')) {
+        if (textResponse.includes('404')) {
+          errorMessage = 'Circle API endpoint not found (404). Check if the API URL has changed.';
+        } else if (textResponse.includes('401') || textResponse.includes('Unauthorized')) {
+          errorMessage = 'Unauthorized: Circle API token is invalid or expired.';
+        } else if (textResponse.includes('403') || textResponse.includes('Forbidden')) {
+          errorMessage = 'Forbidden: Circle API token lacks required permissions.';
+        } else if (textResponse.includes('500')) {
+          errorMessage = 'Circle API server error (500). Try again later.';
+        } else {
+          errorMessage = 'Circle API returned HTML page instead of JSON data.';
+        }
+      }
+      
       return res.status(502).json({
-        error: 'Circle API returned invalid response format',
+        error: errorMessage,
         message: 'Circle API did not return JSON',
-        debug: textResponse.substring(0, 200)
+        debug: {
+          contentType,
+          status: response.status,
+          bodyPreview: textResponse.substring(0, 200),
+          hasCircleToken: !!CIRCLE_AUTH_TOKEN,
+          tokenLength: CIRCLE_AUTH_TOKEN ? CIRCLE_AUTH_TOKEN.length : 0
+        }
       });
     }
 
