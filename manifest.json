@@ -35,6 +35,6 @@
   },
   "host_permissions": [
     "https://app.circle.so/*",
-    "https://your-backend.com/*"
+    "https://*.vercel.app/*"
   ]
 }
