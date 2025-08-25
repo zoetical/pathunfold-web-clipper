@@ -5,7 +5,8 @@ module.exports = async (req, res) => {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Max-Age', '86400');
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
@@ -33,7 +34,7 @@ module.exports = async (req, res) => {
 
     console.log('Attempting authentication for:', email);
 
-    const response = await fetch('https://app.circle.so/api/v1/headless/auth_token', {
+    const response = await fetch('https://app.circle.so/api/headless/v1/auth_token', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${CIRCLE_AUTH_TOKEN}`,
@@ -44,18 +45,28 @@ module.exports = async (req, res) => {
 
     const data = await response.json();
     console.log('Circle API response status:', response.status);
+    console.log('Circle API response:', data);
 
     if (response.ok) {
       // Success - return the access token
+      console.log('✓ Authentication successful for:', email);
       res.status(200).json({
         access_token: data.access_token,
-        expires_in: data.expires_in || 3600
+        expires_in: data.expires_in || 3600,
+        circle_response: data // Include Circle's response for debugging
       });
     } else {
       // Handle Circle API errors
-      console.error('Circle API Error:', data);
+      console.error('✗ Circle API Error:', {
+        status: response.status,
+        error: data.error,
+        message: data.message,
+        full_response: data
+      });
       res.status(response.status).json({
-        error: data.error || 'Failed to authenticate with Circle'
+        error: data.error || 'Failed to authenticate with Circle',
+        message: data.message || 'Authentication failed',
+        details: data
       });
     }
   } catch (error) {

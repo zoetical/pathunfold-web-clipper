@@ -21,7 +21,7 @@ vercel whoami || {
 cd "$(dirname "$0")"
 
 # Deploy to Vercel
-echo "📦 Deploying to Vercel..."
+echo "📦 Deploying to Vercel with updated CORS configuration..."
 vercel --prod
 
 echo ""
