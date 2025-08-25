@@ -164,8 +164,8 @@
   </div>
   
   <div class="form-group">
-    <label for="backendUrl">Backend URL (Optional):</label>
-    <input id="backendUrl" type="text" placeholder="https://your-backend.com/auth" value="https://your-backend.com/auth">
+    <label for="backendUrl">Backend URL (Required):</label>
+    <input id="backendUrl" type="text" placeholder="https://your-project.vercel.app/api/auth">
   </div>
   
   <button id="authenticateButton">Authenticate</button>
@@ -194,7 +194,8 @@
       <li>The access token expires after 1 hour. You'll need to re-authenticate when it expires.</li>
       <li>Your email is only used to generate the access token and is stored locally in your browser.</li>
       <li>Make sure your backend server is properly configured with the Circle Headless Auth token.</li>
-      <li>Default backend URL: https://your-backend.com/auth (replace with your actual backend)</li>
+      <li>Backend URL should point to your deployed authentication endpoint (e.g., https://your-project.vercel.app/api/auth)</li>
+      <li>If authentication fails, double-check that your backend URL is correct and accessible.</li>
     </ul>
   </div>
   

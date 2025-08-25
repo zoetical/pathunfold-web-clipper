@@ -340,9 +340,7 @@ function extractYouTubeId(url) {
 // Handle installation
 chrome.runtime.onInstalled.addListener((details) => {
   console.log('PathUnfold Web Clipper installed');
-  chrome.storage.sync.set({
-    backendUrl: 'https://your-project.vercel.app/api/auth'
-  });
+  // Note: No default backend URL is set - user must configure in settings
   
   // Initialize context menu
   initializeExtension();
