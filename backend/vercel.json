@@ -1,6 +1,3 @@
 {
-  "version": 2,
-  "functions": {
-    "api/auth.js": {}
-  }
+  "version": 2
 }
