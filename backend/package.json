@@ -1,0 +1,22 @@
+{
+  "name": "pathunfold-auth-backend",
+  "version": "1.0.0",
+  "description": "Backend authentication server for PathUnfold Web Clipper",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "keywords": [
+    "circle",
+    "authentication",
+    "web-clipper",
+    "api"
+  ],
+  "author": "PathUnfold Team",
+  "license": "MIT"
+}
