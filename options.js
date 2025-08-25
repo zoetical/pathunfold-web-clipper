@@ -10,7 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function displayCurrentSettings() {
     chrome.storage.sync.get(['email', 'backendUrl', 'accessToken'], (data) => {
       document.getElementById('currentEmail').textContent = data.email || 'Not set';
-      document.getElementById('currentBackend').textContent = data.backendUrl || 'Not configured';
+      const displayBackendUrl = data.backendUrl || 'https://pathunfold-web-clipper.vercel.app/api/auth';
+      document.getElementById('currentBackend').textContent = displayBackendUrl;
       
       if (data.accessToken) {
         document.getElementById('authStatus').textContent = '✓ Authenticated';
@@ -20,9 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('authStatus').style.color = '#dc3545';
       }
       
-      // Populate form fields
+      // Populate form fields with saved data or defaults
       if (data.email) emailInput.value = data.email;
-      if (data.backendUrl) backendUrlInput.value = data.backendUrl;
+      backendUrlInput.value = data.backendUrl || 'https://pathunfold-web-clipper.vercel.app/api/auth';
     });
   }
   
@@ -32,15 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Authenticate button click handler
   authenticateButton.addEventListener('click', async () => {
     const email = emailInput.value.trim();
-    const backendUrl = backendUrlInput.value.trim() || '';
+    const backendUrl = backendUrlInput.value.trim() || 'https://pathunfold-web-clipper.vercel.app/api/auth';
     
     if (!email) {
       showStatus('Please enter a valid email address', 'error');
-      return;
-    }
-    
-    if (!backendUrl) {
-      showStatus('Please enter your backend URL (e.g., https://your-project.vercel.app/api/auth)', 'error');
       return;
     }
     
@@ -91,12 +87,17 @@ document.addEventListener('DOMContentLoaded', () => {
           accessToken: data.access_token,
           tokenTimestamp: Date.now()
         }, () => {
-          showStatus('✓ Authentication successful!', 'success');
+          showStatus('✓ Authentication successful! Closing window...', 'success');
           displayCurrentSettings();
           
           // Re-enable button
           authenticateButton.disabled = false;
           authenticateButton.textContent = 'Authenticate';
+          
+          // Auto-close window after successful authentication
+          setTimeout(() => {
+            window.close();
+          }, 1500); // Wait 1.5 seconds to show success message before closing
         });
       } else {
         throw new Error(data.error || 'Failed to authenticate');
@@ -129,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
       chrome.storage.sync.clear(() => {
         showStatus('Settings cleared successfully', 'success');
         emailInput.value = '';
-        backendUrlInput.value = '';
+        backendUrlInput.value = 'https://pathunfold-web-clipper.vercel.app/api/auth';
         displayCurrentSettings();
       });
     }
