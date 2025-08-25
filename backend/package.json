@@ -5,11 +5,8 @@
   "scripts": {
     "dev": "vercel dev"
   },
-  "dependencies": {
-    "node-fetch": "^2.6.7"
-  },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18.0.0"
   },
   "keywords": [
     "circle",

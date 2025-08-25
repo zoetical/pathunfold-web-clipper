@@ -1,5 +1,5 @@
 // Simple Vercel API function for Circle authentication
-const fetch = require('node-fetch');
+// Using Node.js 18+ native fetch
 
 module.exports = async (req, res) => {
   // Set CORS headers
