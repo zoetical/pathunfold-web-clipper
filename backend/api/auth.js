@@ -61,7 +61,7 @@ module.exports = async (req, res) => {
     console.log('Token prefix:', CIRCLE_AUTH_TOKEN.substring(0, 10) + '...');
     console.log('==============================');
 
-    const response = await fetch('https://app.circle.so/api/headless/v1/auth_token', {
+    const response = await fetch('https://app.circle.so/api/v1/headless/auth_token', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${CIRCLE_AUTH_TOKEN}`,
