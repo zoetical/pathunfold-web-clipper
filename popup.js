@@ -111,8 +111,25 @@ document.addEventListener('DOMContentLoaded', () => {
       action: "postToCircle",
       data: { title, content, spaceId }
     }, (response) => {
+      console.log('Response received:', response);
+      
+      // Re-enable button
       postButton.disabled = false;
       postButton.textContent = 'Post to Circle';
+      
+      // Check for communication errors
+      if (chrome.runtime.lastError) {
+        console.error('Runtime error:', chrome.runtime.lastError);
+        showStatus('✗ Extension communication error. Please reload the extension.', 'error');
+        return;
+      }
+      
+      // Check if response exists
+      if (!response) {
+        console.error('No response received from background script');
+        showStatus('✗ No response from extension. Please try again or reload the extension.', 'error');
+        return;
+      }
       
       if (response.success) {
         showStatus('✓ Posted successfully!', 'success');
@@ -124,7 +141,13 @@ document.addEventListener('DOMContentLoaded', () => {
           showStatus('', '');
         }, 2000);
       } else {
-        showStatus('✗ Error: ' + response.message, 'error');
+        const errorMsg = response.message || 'Unknown error occurred';
+        showStatus('✗ Error: ' + errorMsg, 'error');
+        
+        // Show debug info if available
+        if (response.debug) {
+          console.log('Debug info:', response.debug);
+        }
       }
     });
   });

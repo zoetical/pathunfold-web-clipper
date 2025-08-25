@@ -35,6 +35,8 @@
   },
   "host_permissions": [
     "https://app.circle.so/*",
-    "https://*.vercel.app/*"
+    "https://*.vercel.app/*",
+    "https://www.youtube.com/*",
+    "https://vimeo.com/*"
   ]
 }
