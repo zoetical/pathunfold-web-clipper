@@ -80,12 +80,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
       
       if (response.ok && data.access_token) {
-        // Save authentication data
+        // Save authentication data (no expiration checking)
         chrome.storage.sync.set({
           email: email,
           backendUrl: backendUrl,
-          accessToken: data.access_token,
-          tokenTimestamp: Date.now()
+          accessToken: data.access_token
         }, () => {
           showStatus('✓ Authentication successful! Closing window...', 'success');
           displayCurrentSettings();
@@ -97,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
           // Auto-close window after successful authentication
           setTimeout(() => {
             window.close();
-          }, 1500); // Wait 1.5 seconds to show success message before closing
+          }, 1500);
         });
       } else {
         throw new Error(data.error || 'Failed to authenticate');
@@ -150,22 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
-  // Check for token expiration
-  function checkTokenExpiration() {
-    chrome.storage.sync.get(['tokenTimestamp'], (data) => {
-      if (data.tokenTimestamp) {
-        const tokenAge = Date.now() - data.tokenTimestamp;
-        const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
-        
-        if (tokenAge > oneHour) {
-          showStatus('⚠️ Your access token has expired. Please re-authenticate.', 'error');
-        }
-      }
-    });
-  }
-  
-  // Check token expiration on load
-  checkTokenExpiration();
+  // Check token expiration on load (disabled - no expiration checking)
+  // checkTokenExpiration();
   
   // Save backend URL when changed
   backendUrlInput.addEventListener('change', () => {

@@ -75,10 +75,9 @@ async function postToCircle(data, sendResponse) {
     }
     
     // Get stored data
-    const result = await chrome.storage.sync.get(['accessToken', 'tokenTimestamp', 'email']);
+    const result = await chrome.storage.sync.get(['accessToken', 'email']);
     console.log('Stored data:', { 
       hasToken: !!result.accessToken, 
-      tokenAge: result.tokenTimestamp ? Date.now() - result.tokenTimestamp : 0,
       email: result.email 
     });
     
@@ -87,17 +86,7 @@ async function postToCircle(data, sendResponse) {
       return;
     }
     
-    // Check token expiration
-    if (result.tokenTimestamp) {
-      const tokenAge = Date.now() - result.tokenTimestamp;
-      const oneHour = 3600000; // 1 hour in milliseconds
-      console.log('Token age:', Math.floor(tokenAge / 1000), 'seconds');
-      
-      if (tokenAge > oneHour) {
-        sendResponse({ success: false, message: "Token expired. Please re-authenticate in settings" });
-        return;
-      }
-    }
+    // No token expiration checking - token is always valid once set
     
     // Enhanced video processing - try to get oEmbed iframe
     let processedContent = data.content;
