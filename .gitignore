@@ -59,4 +59,3 @@ test.html
 cors-test.html
 *.test.js
 *.spec.js
-EOF < /dev/null
