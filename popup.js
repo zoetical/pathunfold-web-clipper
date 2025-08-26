@@ -1,6 +1,6 @@
 // Popup script for PathUnfold Web Clipper
 document.addEventListener('DOMContentLoaded', () => {
-  const authStatus = document.getElementById('authStatus');
+  const notAuthenticatedMessage = document.getElementById('notAuthenticatedMessage');
   const clipForm = document.getElementById('clipForm');
   const titleInput = document.getElementById('title');
   const contentInput = document.getElementById('content');
@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusDiv = document.getElementById('status');
   const previewDiv = document.getElementById('preview');
   const previewContent = document.getElementById('previewContent');
+  const gearIcon = document.getElementById('gearIcon');
+  const dropdownMenu = document.getElementById('dropdownMenu');
+  const logoutBtn = document.getElementById('logoutBtn');
   
   // Default space ID
   const DEFAULT_SPACE_ID = '2175665';
@@ -16,20 +19,56 @@ document.addEventListener('DOMContentLoaded', () => {
   // Check authentication status
   chrome.storage.sync.get(['accessToken', 'email'], (data) => {
     if (data.accessToken) {
-      authStatus.className = 'auth-status authenticated';
-      authStatus.innerHTML = `✓ Authenticated as ${data.email || 'user'}`;
+      notAuthenticatedMessage.style.display = 'none';
       clipForm.style.display = 'block';
       loadClipData();
     } else {
-      authStatus.className = 'auth-status not-authenticated';
-      authStatus.innerHTML = 'Not authenticated. <a href="#" id="settingsLink">Click here to authenticate</a>.';
+      notAuthenticatedMessage.style.display = 'block';
       clipForm.style.display = 'none';
       
-      // Re-attach event listener for settings link
+      // Attach event listener for settings link
       document.getElementById('settingsLink').addEventListener('click', (e) => {
         e.preventDefault();
         chrome.runtime.openOptionsPage();
       });
+    }
+  });
+  
+  // Gear icon click handler to toggle dropdown
+  gearIcon.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdownMenu.classList.toggle('show');
+  });
+  
+  // Logout button click handler
+  logoutBtn.addEventListener('click', () => {
+    // Clear all stored authentication data immediately
+    chrome.storage.sync.remove(['accessToken', 'email'], () => {
+      // Show not authenticated message and hide clip form
+      notAuthenticatedMessage.style.display = 'block';
+      clipForm.style.display = 'none';
+      
+      // Clear form data
+      titleInput.value = '';
+      contentInput.value = '';
+      previewDiv.style.display = 'none';
+      statusDiv.style.display = 'none';
+      
+      // Hide dropdown menu
+      dropdownMenu.classList.remove('show');
+      
+      // Re-attach event listener for settings link after logout
+      document.getElementById('settingsLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        chrome.runtime.openOptionsPage();
+      });
+    });
+  });
+  
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!gearIcon.contains(e.target) && !dropdownMenu.contains(e.target)) {
+      dropdownMenu.classList.remove('show');
     }
   });
   
