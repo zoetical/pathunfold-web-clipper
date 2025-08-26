@@ -1,19 +1,33 @@
 {
-  "name": "pathunfold-auth-backend",
-  "version": "1.0.0",
-  "description": "Backend authentication server for PathUnfold Web Clipper",
+  "name": "pathunfold-web-clipper-backend",
+  "version": "2.0.0",
+  "description": "PathUnfold Web Clipper v2 - Advanced content clipping with Iframely + TipTap integration",
+  "main": "api/health.js",
   "scripts": {
-    "dev": "vercel dev"
+    "dev": "vercel dev",
+    "build": "echo 'No build step required for Vercel'",
+    "start": "vercel dev",
+    "test": "echo 'No tests configured yet'"
   },
   "engines": {
     "node": ">=18.0.0"
   },
+  "dependencies": {},
+  "devDependencies": {},
   "keywords": [
     "circle",
-    "authentication",
+    "authentication", 
     "web-clipper",
-    "api"
+    "api",
+    "iframely",
+    "tiptap",
+    "content-extraction"
   ],
   "author": "PathUnfold Team",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "pathunfold-web-clipper"
+  },
+  "homepage": "https://github.com/pathunfold/web-clipper"
 }
