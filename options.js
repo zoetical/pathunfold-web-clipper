@@ -8,12 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Display current settings
   function displayCurrentSettings() {
-    chrome.storage.sync.get(['email', 'backendUrl', 'accessToken'], (data) => {
+    chrome.storage.sync.get(['email', 'backendUrl', 'sessionToken'], (data) => {
       document.getElementById('currentEmail').textContent = data.email || 'Not set';
-      const displayBackendUrl = data.backendUrl || 'https://pathunfold-web-clipper.vercel.app/api/auth';
+      const displayBackendUrl = data.backendUrl || 'https://pathunfold-web-clipper-backend-2qehostvz-mins-projects-ac9e45c3.vercel.app/api';
       document.getElementById('currentBackend').textContent = displayBackendUrl;
       
-      if (data.accessToken) {
+      if (data.sessionToken) {
         document.getElementById('authStatus').textContent = '✓ Authenticated';
         document.getElementById('authStatus').style.color = '#28a745';
       } else {
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Populate form fields with saved data or defaults
       if (data.email) emailInput.value = data.email;
-      backendUrlInput.value = data.backendUrl || 'https://pathunfold-web-clipper.vercel.app/api/auth';
+      backendUrlInput.value = data.backendUrl || 'https://pathunfold-web-clipper-backend-2qehostvz-mins-projects-ac9e45c3.vercel.app/api';
     });
   }
   
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Authenticate button click handler
   authenticateButton.addEventListener('click', async () => {
     const email = emailInput.value.trim();
-    const backendUrl = backendUrlInput.value.trim() || 'https://pathunfold-web-clipper.vercel.app/api/auth';
+    const backendUrl = backendUrlInput.value.trim() || 'https://pathunfold-web-clipper-backend-2qehostvz-mins-projects-ac9e45c3.vercel.app/api';
     
     if (!email) {
       showStatus('Please enter a valid email address', 'error');
@@ -47,9 +47,14 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     
-    // Validate URL format
+    // Validate URL format and ensure it doesn't end with /auth
+    let apiBaseUrl = backendUrl;
+    if (apiBaseUrl.endsWith('/auth')) {
+      apiBaseUrl = apiBaseUrl.substring(0, apiBaseUrl.length - 5);
+    }
+    
     try {
-      new URL(backendUrl);
+      new URL(apiBaseUrl);
     } catch (e) {
       showStatus('Please enter a valid backend URL (must start with http:// or https://)', 'error');
       return;
@@ -61,7 +66,10 @@ document.addEventListener('DOMContentLoaded', () => {
     showStatus('Connecting to backend...', 'info');
     
     try {
-      const response = await fetch(backendUrl, {
+      const authUrl = `${apiBaseUrl}/auth`;
+      console.log('Authenticating with URL:', authUrl);
+      
+      const response = await fetch(authUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -79,12 +87,12 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const data = await response.json();
       
-      if (response.ok && data.access_token) {
-        // Save authentication data (no expiration checking)
+      if (response.ok && data.session_token) {
+        // Save authentication data with new JWT session token
         chrome.storage.sync.set({
           email: email,
-          backendUrl: backendUrl,
-          accessToken: data.access_token
+          backendUrl: apiBaseUrl,
+          sessionToken: data.session_token
         }, () => {
           showStatus('✓ Authentication successful! Closing window...', 'success');
           displayCurrentSettings();
@@ -111,6 +119,8 @@ document.addEventListener('DOMContentLoaded', () => {
         errorMessage = 'Invalid backend URL: Server returned a webpage instead of API response.';
       } else if (error.message.includes('Invalid email')) {
         errorMessage = 'Invalid email address';
+      } else if (error.message.includes('Email not found')) {
+        errorMessage = 'Email not found in Circle community';
       } else {
         errorMessage = `Error: ${error.message}`;
       }
@@ -129,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
       chrome.storage.sync.clear(() => {
         showStatus('Settings cleared successfully', 'success');
         emailInput.value = '';
-        backendUrlInput.value = 'https://pathunfold-web-clipper.vercel.app/api/auth';
+        backendUrlInput.value = 'https://pathunfold-web-clipper-backend-2qehostvz-mins-projects-ac9e45c3.vercel.app/api';
         displayCurrentSettings();
       });
     }

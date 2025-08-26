@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "PathUnfold Web Clipper",
-  "version": "1.0",
-  "description": "Clip web content (text, images, videos, audio) and post to Circle.so using Headless Member API",
+  "version": "2.0.0",
+  "description": "Advanced web content clipper with rich previews and intelligent embedding for Circle.so communities",
   "icons": {
     "16": "icons/pathunfold logo 3.png",
     "48": "icons/pathunfold logo 3.png",
@@ -11,10 +11,19 @@
   "permissions": [
     "activeTab",
     "storage",
-    "contextMenus"
+    "contextMenus",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://app.circle.so/*",
+    "https://*.vercel.app/*",
+    "https://iframe.ly/*",
+    "https://www.youtube.com/*",
+    "https://vimeo.com/*"
   ],
   "action": {
     "default_popup": "popup.html",
+    "default_title": "Clip to Circle",
     "default_icon": {
       "16": "icons/pathunfold logo 3.png",
       "48": "icons/pathunfold logo 3.png"
@@ -27,16 +36,15 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"]
+      "js": ["content.js"],
+      "run_at": "document_end"
     }
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
-  "host_permissions": [
-    "https://app.circle.so/*",
-    "https://*.vercel.app/*",
-    "https://www.youtube.com/*",
-    "https://vimeo.com/*"
-  ]
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
 }
